@@ -2,6 +2,7 @@ package ro.pub.cs.systems.eim.practicaltest01var05;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -71,6 +72,12 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
                     }
                     buttons_pressed++;
                     break;
+                    case R.id.button:
+                        Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05SecondaryActivity.class);
+                        String istoric = history.getText().toString();
+                        intent.putExtra(Constants.HISTORY, istoric);
+                        startActivityForResult(intent, Constants.REQUEST_CODE);
+                        break;
             }
         }
     }
@@ -107,5 +114,18 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
             Toast.makeText(this, "The saved value is: " + buttons_pressed, Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int result_code, Intent intent) {
+        super.onActivityResult(requestCode, result_code, intent);
+        if (requestCode == Constants.REQUEST_CODE) {
+            if (result_code == RESULT_OK)
+                Toast.makeText(this, "The activity returned with result VERIFY", Toast.LENGTH_LONG).show();
+            else if (result_code == RESULT_CANCELED)
+                Toast.makeText(this, "The activity returned with result CANCEL", Toast.LENGTH_LONG).show();
+            history.setText("");
+            buttons_pressed = 0;
+        }
     }
 }
