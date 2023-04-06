@@ -2,8 +2,12 @@ package ro.pub.cs.systems.eim.practicaltest01var05;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,6 +25,19 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
     private TextView history;
 
     private int buttons_pressed = 0;
+    private int serviceStatus = 0;
+
+    private IntentFilter intentFilter= new IntentFilter();
+
+    private MessageBroadcastReceiver messageBroadcastReceiver = new MessageBroadcastReceiver();
+
+    private class MessageBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("[Message]", intent.getStringExtra("message"));
+        }
+    }
 
     class Button_listen implements View.OnClickListener {
 
@@ -72,12 +89,19 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
                     }
                     buttons_pressed++;
                     break;
-                    case R.id.button:
-                        Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05SecondaryActivity.class);
-                        String istoric = history.getText().toString();
-                        intent.putExtra(Constants.HISTORY, istoric);
-                        startActivityForResult(intent, Constants.REQUEST_CODE);
-                        break;
+                case R.id.button:
+                    Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05SecondaryActivity.class);
+                    String istoric = history.getText().toString();
+                    intent.putExtra(Constants.HISTORY, istoric);
+                    startActivityForResult(intent, Constants.REQUEST_CODE);
+                    break;
+            }
+            if (buttons_pressed >= 5 && serviceStatus == 0){
+                Log.d("DA", "AM Intrat sa pornim serviciul");
+                Intent intent = new Intent(getApplicationContext(), PracticalTest01Var05Service.class);
+                intent.putExtra(Constants.HISTORY, history.getText().toString());
+                getApplicationContext().startService(intent);
+                serviceStatus = 1;
             }
         }
     }
@@ -99,6 +123,8 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
         bottom_left_button.setOnClickListener(listen);
         bottom_right_button.setOnClickListener(listen);
         center_button.setOnClickListener(listen);
+
+        intentFilter.addAction("DIN SERVICIU");
     }
 
     @Override
@@ -127,5 +153,26 @@ public class PracticalTest01Var05MainActivity extends AppCompatActivity {
             history.setText("");
             buttons_pressed = 0;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(messageBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(messageBroadcastReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Intent intent = new Intent(this, PracticalTest01Var05Service.class);
+        stopService(intent);
+        serviceStatus = 0;
+        super.onDestroy();
+
     }
 }
